@@ -1,4 +1,8 @@
 
+import Logger from '@/utils/Logger';
+
+const logger = Logger.withTag('API');
+
 // region: --- Interface Definitions ---
 export interface DoubanItem {
   title: string;
@@ -204,13 +208,48 @@ export class API {
   async searchVideo(query: string, resourceId: string, signal?: AbortSignal): Promise<{ results: SearchResult[] }> {
     const url = `/api/search/one?q=${encodeURIComponent(query)}&resourceId=${encodeURIComponent(resourceId)}`;
     const response = await this._fetch(url, { signal });
-    return response.json();
+    const { results } = await response.json();
+    return { results: results.filter((item: any) => item.title === query )};
   }
 
   async getResources(signal?: AbortSignal): Promise<ApiSite[]> {
-    const url = `/api/search/resources`;
+    const url = `/api/admin/config`;
     const response = await this._fetch(url, { signal });
-    return response.json();
+    const config = await response.json();
+    
+    // 添加安全检查
+    if (!config || !config.Config.SourceConfig) {
+      logger.warn('API response missing SourceConfig:', config);
+      return [];
+    }
+    
+    // 确保 SourceConfig 是数组
+    if (!Array.isArray(config.Config.SourceConfig)) {
+      logger.warn('SourceConfig is not an array:', config.Config.SourceConfig);
+      return [];
+    }
+    
+    // 过滤并验证每个站点配置，同时进行去重
+    const seenKeys = new Set<string>();
+    const uniqueSites: ApiSite[] = [];
+    
+    config.Config.SourceConfig
+      .filter((site: any) => site && !site.disabled)
+      .forEach((site: any) => {
+        const key = site.key || '';
+        // 基于 key 字段去重
+        if (key && !seenKeys.has(key)) {
+          seenKeys.add(key);
+          uniqueSites.push({
+            key: key,
+            api: site.api || '',
+            name: site.name || '',
+            detail: site.detail
+          });
+        }
+      });
+    
+    return uniqueSites;
   }
 
   async getVideoDetail(source: string, id: string): Promise<VideoDetail> {

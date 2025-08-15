@@ -1,4 +1,6 @@
-import { api } from "./api";
+import Logger from '@/utils/Logger';
+
+const logger = Logger.withTag('M3U');
 
 export interface Channel {
   id: string;
@@ -61,7 +63,7 @@ export const fetchAndParseM3u = async (m3uUrl: string): Promise<Channel[]> => {
     const m3uText = await response.text();
     return parseM3U(m3uText);
   } catch (error) {
-    console.info("Error fetching or parsing M3U:", error);
+    logger.info("Error fetching or parsing M3U:", error);
     return []; // Return empty array on error
   }
 };

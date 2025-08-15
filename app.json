@@ -23,7 +23,9 @@
             "newArchEnabled": false
           },
           "android": {
-            "newArchEnabled": false
+            "newArchEnabled": false,
+            "enableProguardInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true
           }
         }
       ],
@@ -34,7 +36,12 @@
     },
     "name": "OrionTV",
     "slug": "OrionTV",
+    "orientation": "default",
     "icon": "./assets/images/icon.png",
+    "userInterfaceStyle": "dark",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "android": {
       "package": "com.oriontv",
       "usesCleartextTraffic": true,
@@ -43,11 +50,38 @@
       "icon": "./assets/images/icon.png",
       "permissions": [
         "android.permission.INTERNET",
-        "android.permission.ACCESS_NETWORK_STATE"
+        "android.permission.ACCESS_NETWORK_STATE",
+        "android.permission.WAKE_LOCK"
+      ],
+      "screenOrientation": "unspecified",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "data": [
+            {
+              "scheme": "oriontv"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
       ]
     },
     "ios": {
-      "bundleIdentifier": "com.oriontv"
+      "bundleIdentifier": "com.oriontv",
+      "supportsTablet": true,
+      "requireFullScreen": false,
+      "supportedInterfaceOrientations": [
+        "UIInterfaceOrientationPortrait",
+        "UIInterfaceOrientationLandscapeLeft",
+        "UIInterfaceOrientationLandscapeRight",
+        "UIInterfaceOrientationPortraitUpsideDown"
+      ],
+      "config": {
+        "usesNonExemptEncryption": false
+      }
     },
     "scheme": "oriontv",
     "extra": {

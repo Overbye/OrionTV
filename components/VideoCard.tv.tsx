@@ -6,6 +6,9 @@ import { PlayRecordManager } from "@/services/storage";
 import { API } from "@/services/api";
 import { ThemedText } from "@/components/ThemedText";
 import { Colors } from "@/constants/Colors";
+import Logger from '@/utils/Logger';
+
+const logger = Logger.withTag('VideoCardTV');
 
 interface VideoCardProps extends React.ComponentProps<typeof TouchableOpacity> {
   id: string;
@@ -131,7 +134,7 @@ const VideoCard = forwardRef<View, VideoCardProps>(
                 router.replace("/");
               }
             } catch (error) {
-              console.info("Failed to delete play record:", error);
+              logger.info("Failed to delete play record:", error);
               Alert.alert("错误", "删除观看记录失败，请重试");
             }
           },
@@ -195,7 +198,7 @@ const VideoCard = forwardRef<View, VideoCardProps>(
             {isContinueWatching && (
               <View style={styles.infoRow}>
                 <ThemedText style={styles.continueLabel}>
-                  第{episodeIndex! + 1}集 已观看 {Math.round((progress || 0) * 100)}%
+                  第{episodeIndex}集 已观看 {Math.round((progress || 0) * 100)}%
                 </ThemedText>
               </View>
             )}

@@ -1,5 +1,8 @@
 import { create } from 'zustand';
 import { remoteControlService } from '@/services/remoteControlService';
+import Logger from '@/utils/Logger';
+
+const logger = Logger.withTag('RemoteControlStore');
 
 interface RemoteControlState {
   isServerRunning: boolean;
@@ -8,10 +11,12 @@ interface RemoteControlState {
   startServer: () => Promise<void>;
   stopServer: () => void;
   isModalVisible: boolean;
-  showModal: () => void;
+  showModal: (targetPage?: string) => void;
   hideModal: () => void;
   lastMessage: string | null;
-  setMessage: (message: string) => void;
+  targetPage: string | null;
+  setMessage: (message: string, targetPage?: string) => void;
+  clearMessage: () => void;
 }
 
 export const useRemoteControlStore = create<RemoteControlState>((set, get) => ({
@@ -20,6 +25,7 @@ export const useRemoteControlStore = create<RemoteControlState>((set, get) => ({
   error: null,
   isModalVisible: false,
   lastMessage: null,
+  targetPage: null,
 
   startServer: async () => {
     if (get().isServerRunning) {
@@ -27,21 +33,23 @@ export const useRemoteControlStore = create<RemoteControlState>((set, get) => ({
     }
     remoteControlService.init({
       onMessage: (message: string) => {
-        console.log('[RemoteControlStore] Received message:', message);
-        set({ lastMessage: message });
+        logger.debug('Received message:', message);
+        const currentState = get();
+        // Use the current targetPage from the store
+        set({ lastMessage: message, targetPage: currentState.targetPage });
       },
       onHandshake: () => {
-        console.log('[RemoteControlStore] Handshake successful');
+        logger.debug('Handshake successful');
         set({ isModalVisible: false })
       },
     });
     try {
       const url = await remoteControlService.startServer();
-      console.log(`[RemoteControlStore] Server started, URL: ${url}`);
+      logger.info('Server started, URL:', url);
       set({ isServerRunning: true, serverUrl: url, error: null });
     } catch {
       const errorMessage = '启动失败，请强制退应用后重试。';
-      console.info('[RemoteControlStore] Failed to start server:', errorMessage);
+      logger.error('Failed to start server:', errorMessage);
       set({ error: errorMessage });
     }
   },
@@ -53,10 +61,14 @@ export const useRemoteControlStore = create<RemoteControlState>((set, get) => ({
     }
   },
 
-  showModal: () => set({ isModalVisible: true }),
-  hideModal: () => set({ isModalVisible: false }),
+  showModal: (targetPage?: string) => set({ isModalVisible: true, targetPage }),
+  hideModal: () => set({ isModalVisible: false, targetPage: null }),
 
-  setMessage: (message: string) => {
-    set({ lastMessage: `${message}_${Date.now()}` });
+  setMessage: (message: string, targetPage?: string) => {
+    set({ lastMessage: `${message}_${Date.now()}`, targetPage });
+  },
+
+  clearMessage: () => {
+    set({ lastMessage: null, targetPage: null });
   },
 }));
